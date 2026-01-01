@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { apiClient } from '@/lib/api'
 import type { Todo } from '@/types'
+import '@/styles/todo-components.css'
 
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([])
@@ -10,6 +11,7 @@ export default function TodoList() {
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isFormVisible, setIsFormVisible] = useState(false)
 
   const fetchTodos = async () => {
     try {
@@ -36,6 +38,7 @@ export default function TodoList() {
       setError('')
       await apiClient.createTodo({ description: newTodoDescription })
       setNewTodoDescription('')
+      setIsFormVisible(false)
       await fetchTodos()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create todo')
@@ -66,25 +69,69 @@ export default function TodoList() {
     return <div className="text-center py-8">Loading todos...</div>
   }
 
+  // Helper to determine priority (mock - you can make this dynamic later)
+  const getPriority = (todo: Todo): 'high' | 'medium' | 'low' | 'none' => {
+    // For demo: you could add priority field to Todo model
+    // For now, using a simple rule based on description keywords
+    const desc = todo.description.toLowerCase()
+    if (desc.includes('urgent') || desc.includes('asap') || desc.includes('important')) return 'high'
+    if (desc.includes('soon') || desc.includes('meeting')) return 'medium'
+    if (desc.includes('later') || desc.includes('someday')) return 'low'
+    return 'none'
+  }
+
   return (
     <div className="space-y-6">
-      {/* Create Todo Form */}
-      <form onSubmit={handleCreateTodo} className="flex gap-2">
-        <input
-          type="text"
-          value={newTodoDescription}
-          onChange={(e) => setNewTodoDescription(e.target.value)}
-          placeholder="What needs to be done?"
-          maxLength={500}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-        />
-        <button
-          type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {/* Floating Add Button */}
+      <button
+        onClick={() => setIsFormVisible(!isFormVisible)}
+        className="floating-add-btn"
+        aria-label="Add Todo"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
         >
-          Add
-        </button>
-      </form>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+
+      {/* Create Todo Form - Modal style */}
+      {isFormVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]" onClick={() => setIsFormVisible(false)}>
+          <div className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Add New Todo</h3>
+            <form onSubmit={handleCreateTodo} className="space-y-4">
+              <input
+                type="text"
+                value={newTodoDescription}
+                onChange={(e) => setNewTodoDescription(e.target.value)}
+                placeholder="What needs to be done?"
+                maxLength={500}
+                autoFocus
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsFormVisible(false)}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition"
+                >
+                  Add Todo
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -128,33 +175,54 @@ export default function TodoList() {
       </div>
 
       {/* Todo List */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {todos.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">
-            {filter === 'all' ? 'No todos yet. Add one above!' : `No ${filter} todos.`}
-          </p>
+          <div className="empty-state">
+            <svg className="empty-state-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#4F46E5" />
+                  <stop offset="100%" stopColor="#7C3AED" />
+                </linearGradient>
+              </defs>
+              <circle className="empty-state-svg" cx="100" cy="100" r="80" strokeWidth="3"/>
+              <path className="empty-state-svg" d="M70 100 L90 120 L130 80" strokeWidth="4"/>
+              <circle className="empty-state-svg" cx="100" cy="40" r="8" fill="url(#gradient)"/>
+              <circle className="empty-state-svg" cx="100" cy="160" r="8" fill="url(#gradient)"/>
+              <circle className="empty-state-svg" cx="40" cy="100" r="8" fill="url(#gradient)"/>
+              <circle className="empty-state-svg" cx="160" cy="100" r="8" fill="url(#gradient)"/>
+            </svg>
+            <h3 className="empty-state-title">
+              {filter === 'all' ? 'Nothing to do!' : `No ${filter} todos`}
+            </h3>
+            <p className="empty-state-subtitle">
+              {filter === 'all'
+                ? "You're all caught up! Click the button below to add your first task."
+                : `You don't have any ${filter} todos right now.`}
+            </p>
+            <p className="empty-state-encouragement">
+              {filter === 'all' ? "Every great journey starts with a single task." : "Keep up the great work!"}
+            </p>
+          </div>
         ) : (
           todos.map((todo) => (
             <div
               key={todo.id}
-              className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-md hover:shadow-sm transition-shadow"
+              className={`todo-card ${todo.completed ? 'completed' : ''}`}
+              data-priority={getPriority(todo)}
             >
               <input
                 type="checkbox"
                 checked={todo.completed}
                 onChange={() => handleToggleTodo(todo.id)}
-                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                className="todo-checkbox"
               />
-              <span
-                className={`flex-1 ${
-                  todo.completed ? 'line-through text-gray-500' : 'text-gray-900'
-                }`}
-              >
+              <span className="todo-text">
                 {todo.description}
               </span>
               <button
                 onClick={() => handleDeleteTodo(todo.id)}
-                className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                className="todo-delete-btn"
               >
                 Delete
               </button>
