@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { apiClient } from '@/lib/api'
 import type { Todo } from '@/types'
-import '@/styles/todo-components.css'
 
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([])
@@ -66,7 +65,11 @@ export default function TodoList() {
   }
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading todos...</div>
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    )
   }
 
   // Helper to determine priority (mock - you can make this dynamic later)
@@ -85,7 +88,7 @@ export default function TodoList() {
       {/* Floating Add Button */}
       <button
         onClick={() => setIsFormVisible(!isFormVisible)}
-        className="floating-add-btn"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/30 flex items-center justify-center text-white hover:shadow-xl transition-all duration-300 z-10"
         aria-label="Add Todo"
       >
         <svg
@@ -93,6 +96,7 @@ export default function TodoList() {
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          className="w-6 h-6"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
         </svg>
@@ -100,8 +104,14 @@ export default function TodoList() {
 
       {/* Create Todo Form - Modal style */}
       {isFormVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]" onClick={() => setIsFormVisible(false)}>
-          <div className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setIsFormVisible(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-100 opacity-100"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold text-gray-900 mb-4">Add New Todo</h3>
             <form onSubmit={handleCreateTodo} className="space-y-4">
               <input
@@ -111,19 +121,19 @@ export default function TodoList() {
                 placeholder="What needs to be done?"
                 maxLength={500}
                 autoFocus
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                className="input-field"
               />
-              <div className="flex gap-2 justify-end">
+              <div className="flex gap-3 justify-end">
                 <button
                   type="button"
                   onClick={() => setIsFormVisible(false)}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                  className="btn btn-outline px-4 py-2"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition"
+                  className="btn btn-primary px-6 py-2"
                 >
                   Add Todo
                 </button>
@@ -135,18 +145,18 @@ export default function TodoList() {
 
       {/* Error Message */}
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-xl bg-red-50 p-4 border border-red-200">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-2 bg-gray-100 p-1 rounded-xl w-fit">
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             filter === 'all'
-              ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'bg-white text-indigo-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -154,9 +164,9 @@ export default function TodoList() {
         </button>
         <button
           onClick={() => setFilter('active')}
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             filter === 'active'
-              ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'bg-white text-indigo-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -164,9 +174,9 @@ export default function TodoList() {
         </button>
         <button
           onClick={() => setFilter('completed')}
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             filter === 'completed'
-              ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'bg-white text-indigo-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -177,63 +187,61 @@ export default function TodoList() {
       {/* Todo List */}
       <div className="space-y-3">
         {todos.length === 0 ? (
-          <div className="empty-state">
-            <svg className="empty-state-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#4F46E5" />
-                  <stop offset="100%" stopColor="#7C3AED" />
-                </linearGradient>
-              </defs>
-              <circle className="empty-state-svg" cx="100" cy="100" r="80" strokeWidth="3"/>
-              <path className="empty-state-svg" d="M70 100 L90 120 L130 80" strokeWidth="4"/>
-              <circle className="empty-state-svg" cx="100" cy="40" r="8" fill="url(#gradient)"/>
-              <circle className="empty-state-svg" cx="100" cy="160" r="8" fill="url(#gradient)"/>
-              <circle className="empty-state-svg" cx="40" cy="100" r="8" fill="url(#gradient)"/>
-              <circle className="empty-state-svg" cx="160" cy="100" r="8" fill="url(#gradient)"/>
-            </svg>
-            <h3 className="empty-state-title">
+          <div className="text-center py-16">
+            <div className="inline-block p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl mb-6">
+              <svg className="w-16 h-16 mx-auto text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               {filter === 'all' ? 'Nothing to do!' : `No ${filter} todos`}
             </h3>
-            <p className="empty-state-subtitle">
+            <p className="text-gray-600 max-w-md mx-auto">
               {filter === 'all'
-                ? "You're all caught up! Click the button below to add your first task."
+                ? "You're all caught up! Add a new task to get started."
                 : `You don't have any ${filter} todos right now.`}
-            </p>
-            <p className="empty-state-encouragement">
-              {filter === 'all' ? "Every great journey starts with a single task." : "Keep up the great work!"}
             </p>
           </div>
         ) : (
           todos.map((todo) => (
             <div
               key={todo.id}
-              className={`todo-card ${todo.completed ? 'completed' : ''}`}
-              data-priority={getPriority(todo)}
+              className={`flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 transition-all duration-300 hover:shadow-md ${
+                todo.completed ? 'opacity-70' : ''
+              }`}
             >
               <input
                 type="checkbox"
                 checked={todo.completed}
                 onChange={() => handleToggleTodo(todo.id)}
-                className="todo-checkbox"
+                className="w-5 h-5 rounded-full border-2 border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
               />
-              <span className="todo-text">
+              <span className={`flex-1 ${todo.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
                 {todo.description}
               </span>
-              <button
-                onClick={() => handleDeleteTodo(todo.id)}
-                className="todo-delete-btn"
-              >
-                Delete
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleDeleteTodo(todo.id)}
+                  className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
           ))
         )}
       </div>
 
       {/* Stats */}
-      <div className="text-sm text-gray-600 text-center">
-        {todos.length} {todos.length === 1 ? 'todo' : 'todos'}
+      <div className="flex justify-between items-center text-sm text-gray-600 bg-gray-50 p-3 rounded-xl">
+        <span>
+          {todos.filter(t => !t.completed).length} active {todos.filter(t => !t.completed).length === 1 ? 'task' : 'tasks'}
+        </span>
+        <span>
+          {todos.length} {todos.length === 1 ? 'task' : 'tasks'} total
+        </span>
       </div>
     </div>
   )
