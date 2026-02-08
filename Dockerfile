@@ -22,8 +22,8 @@ RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-# Expose port
-EXPOSE 8000
+# Expose port (7860 for Hugging Face Spaces)
+EXPOSE 7860
 
-# Start the application with uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Start the application - FIXED CMD
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
