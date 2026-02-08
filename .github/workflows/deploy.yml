@@ -1,22 +1,22 @@
-name: Todo App CI
+name: Deploy to Hugging Face
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: Install dependencies
-        working-directory: ./todo-app
-        run: npm install
-      - name: Build app
-        working-directory: ./todo-app
-        run: npm run build
-
+    - uses: actions/checkout@v4
+    
+    - name: Push to Hugging Face
+      uses: actions-js/push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        directory: ./
+        repository: ${{ secrets.HF_USERNAME }}/${{ secrets.HF_SPACE_NAME }}
+        branch: main
+        git_config_email: "actions@github.com"
+        git_config_name: "GitHub Actions"
